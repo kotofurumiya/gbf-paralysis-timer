@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>グラブル麻痺タイマー</title>
+  <link rel="shortcut icon" href="./favicon.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="modules.js" defer></script>
+  <script src="main.js" defer></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-43559872-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-43559872-1');
+  </script>
+</head>
+<body>
+<main>
+  <div class="display-container">
+    <div class="canvas-container">
+      <canvas class="timer-canvas"></canvas>
+    </div>
+
+    <div class="timer-display">
+      <output class="timer-output"></output>
+    </div>
+  </div>
+
+  <div class="control-container">
+    <div class="button-container">
+      <button class="paralysis-60-button paralysis-button">麻痺60</button>
+      <button class="extend-button paralysis-button">麻痺延長</button>
+      <button class="unextend-button paralysis-button">延長失敗</button>
+    </div>
+
+    <div class="button-container system-button-container">
+      <button class="system-button reset-button">リセット</button>
+    </div>
+  </div>
+</main>
+
+<footer class="app-footer">
+  <div><a target="_blank" href="https://github.com/kotofurumiya/gbf-paralysis-timer">View Source on GitHub</a></div>
+</footer>
+</body>
+</html>
