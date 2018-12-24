@@ -123,6 +123,7 @@ a:visited {
 @media screen and (orientation: portrait) {
   body {
     height: 100vh;
+    padding-bottom: 5em;
   }
 
   main {
