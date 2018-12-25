@@ -1,12 +1,20 @@
+// 発動からデバフアイコン表示までの時間。この辺り要計測
+const CLINCHER_DELAY = 1.19 * 1000; // 発動から麻痺アイコン表示まで1.19秒ぐらい？
+const TWOCROWN_DELAY = 3.08 * 1000; // 発動から延長アイコン表示まで3.08秒ぐらい？
+
 const canvas = document.querySelector('.timer-canvas');
 canvas.width = 600;
 canvas.height = 600;
+
+const dataStore = new DataStore();
 
 const timerOutput = document.querySelector('.timer-output');
 
 const paralysis60Button = document.querySelector('.paralysis-60-button');
 const extendButton = document.querySelector('.extend-button');
 const unextendButton = document.querySelector('.unextend-button');
+
+const buttonTimingSelect = document.querySelector('.button-timing-select');
 
 const resetButton = document.querySelector('.reset-button');
 
@@ -40,10 +48,12 @@ const resetButton = document.querySelector('.reset-button');
   unextendButton.disabled = true;
 
   paralysis60Button.addEventListener('click', (event) => {
+    const delayMs = dataStore.buttonTiming === 'immediate' ? 0 : CLINCHER_DELAY;
+
     extendButton.disabled = false;
     timer.unextend();
     timer.reset();
-    timer.start();
+    timer.start(delayMs);
   });
 
   extendButton.addEventListener('click', (event) => {
@@ -52,6 +62,12 @@ const resetButton = document.querySelector('.reset-button');
 
   unextendButton.addEventListener('click', (event) => {
     timer.unextend();
+  });
+
+  // 設定ボタンの動作
+  buttonTimingSelect.value = dataStore.buttonTiming;
+  buttonTimingSelect.addEventListener('change', (event) => {
+    dataStore.buttonTiming = buttonTimingSelect.value;
   });
 
   // システムボタンの動作

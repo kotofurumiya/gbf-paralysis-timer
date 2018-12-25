@@ -10,6 +10,41 @@ async function loadImageAsync(srcUrl) {
   });
 }
 
+class DataStore {
+  constructor() {
+    this._storage = localStorage;
+  }
+
+  saveJson(json) {
+    if(this._storage) {
+      this._storage.setItem('preferences', JSON.stringify(json));
+    }
+  }
+
+  loadAsJson() {
+    if(this._storage && this._storage.getItem('preferences')) {
+      try {
+        return JSON.parse(this._storage.getItem('preferences'));
+      } catch(e) {
+        return {};
+      }
+    } else {
+      return {};
+    }
+  }
+
+  get buttonTiming() {
+    const pref = this.loadAsJson();
+    return 'buttonTiming' in pref ? pref.buttonTiming : 'immediate';
+  }
+
+  set buttonTiming(value) {
+    const pref = this.loadAsJson();
+    pref['buttonTiming'] = value;
+    this.saveJson(pref);
+  }
+}
+
 class EventDispatcher {
   constructor() {
     this._listenersMap = new Map();
@@ -58,10 +93,10 @@ class ParalysisTimer extends EventDispatcher {
     }
   }
 
-  start() {
+  start(delayMs = 0) {
     this._clearInterval();
 
-    this._startTimeMs = performance.now();
+    this._startTimeMs = performance.now() - delayMs;
     this._intervalId = setInterval(() => {
       const elapsedTimeMs = performance.now() - this._startTimeMs;
       const remainTimeMs = Math.max(this._maxMs - elapsedTimeMs, 0);
