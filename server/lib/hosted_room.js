@@ -66,12 +66,12 @@ class HostedRoom extends EventEmitter {
 
     // 切断時にコネクションの一覧から削除
     connection.on('close', (reasonCode, description) => {
-      this.leftConnection(connection);
+      this.leaveConnection(connection);
     });
   }
 
   // コネクションをルームから退室
-  leftConnection(connection) {
+  leaveConnection(connection) {
     const index = this._connections.indexOf(connection);
     if(index > -1) {
       this._connections.splice(index, 1);
