@@ -108,6 +108,21 @@ class ParalysisTimer extends EventDispatcher {
     }, 10); // 仕様上4msが限度
   }
 
+  startAt(epochTime) {
+    this._clearInterval();
+
+    this._startTimeMs = epochTime;
+    this._intervalId = setInterval(() => {
+      const elapsedTimeMs = new Date().getTime() - this._startTimeMs;
+      const remainTimeMs = Math.max(this._maxMs - elapsedTimeMs, 0);
+      const maxTimeMs = this._maxMs;
+
+      this._elapsedTimeMs = elapsedTimeMs;
+      this._remainTimeMs = remainTimeMs;
+      this.dispatchEvent('tick', { maxTimeMs, remainTimeMs, elapsedTimeMs });
+    }, 10); // 仕様上4msが限度
+  }
+
   stop() {
     this._clearInterval();
   }

@@ -2,6 +2,11 @@
 const CLINCHER_DELAY = 1.19 * 1000; // 発動から麻痺アイコン表示まで1.19秒ぐらい？
 const TWOCROWN_DELAY = 3.08 * 1000; // 発動から延長アイコン表示まで3.08秒ぐらい？
 
+const searchParams = new URLSearchParams(window.location.search);
+const appConfig = config || {};
+const appMode = searchParams.has('roomid') ? 'client' : 'host';
+const roomid = appMode === 'client' ? searchParams.get('roomid') : '';
+
 const canvas = document.querySelector('.timer-canvas');
 canvas.width = 600;
 canvas.height = 600;
@@ -15,8 +20,12 @@ const extendButton = document.querySelector('.extend-button');
 const unextendButton = document.querySelector('.unextend-button');
 
 const buttonTimingSelect = document.querySelector('.button-timing-select');
+const shareUrlGetButton = document.querySelector('.share-url-button');
+const shareUrlInput = document.querySelector('.share-url-input');
 
 const resetButton = document.querySelector('.reset-button');
+
+let socket = null;
 
 (async function main() {
   // タイマーと描画周り
@@ -31,6 +40,86 @@ const resetButton = document.querySelector('.reset-button');
     timerCanvas.render(event.maxTimeMs, event.elapsedTimeMs);
     timerOutput.value = (event.remainTimeMs / 1000).toFixed(2);
   });
+
+  //
+  // クライアントモード
+  //
+  if(appMode === 'client') {
+    const mainElement = document.querySelector('main');
+    mainElement.classList.add('client-mode');
+
+    if(appConfig.roomServerUrl) {
+      const ws = new WebSocket(appConfig.roomServerUrl);
+
+      ws.addEventListener('open', (event) => {
+        ws.send(JSON.stringify({
+          payload: {
+            command: 'joinroom',
+            roomid
+          }
+        }));
+      });
+
+      ws.addEventListener('message', (event) => {
+        try {
+          const messageJson = JSON.parse(event.data);
+          if(messageJson.status === 'ok') {
+            const command = messageJson.payload.command || 'none';
+
+            if(command === 'starttimer') {
+              const startEpoch = messageJson.payload.startAt;
+              const buttonTiming = messageJson.payload.buttonTiming;
+              const delayMs = !buttonTiming || buttonTiming === 'immediate' ? 0 : CLINCHER_DELAY;
+
+              timer.unextend();
+              timer.reset();
+              timer.startAt(startEpoch + delayMs);
+            } else if(command === 'stoptimer') {
+              timer.stop();
+            } else if(command === 'resettimer') {
+              timer.stop();
+              timer.reset();
+              timer.unextend();
+              timerCanvas.render(1, 0);
+              timerOutput.value = '60.00';
+            } else if(command === 'extendtimer') {
+              timer.extend();
+            } else if(command === 'unextendtimer') {
+              timer.unextend();
+            }
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      });
+
+      ws.addEventListener('close', (event) => {
+        if(event.code === 4000) {
+          alert('部屋主との接続が切れました。部屋は解散します');
+        }
+      });
+
+      ws.addEventListener('error', (event) => {
+        alert('ルームへの接続に失敗しました')
+      });
+    }
+
+    return;
+  }
+
+  //
+  // ホストモード
+  //
+
+  function broadcastJson(json) {
+    if(socket) {
+      try {
+        socket.send(JSON.stringify(json));
+      } catch(e) {
+        console.error('JSON parse error', e);
+      }
+    }
+  }
 
   // タイマーのモード切り替わったらボタンの有効/無効も切り替える
   timer.addEventListener('extend', (event) => {
@@ -54,20 +143,91 @@ const resetButton = document.querySelector('.reset-button');
     timer.unextend();
     timer.reset();
     timer.start(delayMs);
+
+    broadcastJson({
+      payload: {
+        broadcastPayload: {
+          startAt: new Date().getTime() - delayMs,
+          command: 'starttimer'
+        }
+      }
+    });
   });
 
   extendButton.addEventListener('click', (event) => {
     timer.extend();
+
+    broadcastJson({
+      payload: {
+        broadcastPayload: { command: 'extendtimer' }
+      }
+    });
   });
 
   unextendButton.addEventListener('click', (event) => {
     timer.unextend();
+
+    broadcastJson({
+      payload: {
+        broadcastPayload: { command: 'unextendtimer' }
+      }
+    });
   });
 
   // 設定ボタンの動作
   buttonTimingSelect.value = dataStore.buttonTiming;
   buttonTimingSelect.addEventListener('change', (event) => {
     dataStore.buttonTiming = buttonTimingSelect.value;
+  });
+
+  shareUrlGetButton.addEventListener('click', () => {
+    shareUrlGetButton.disabled = true;
+    shareUrlInput.value = '取得中です……';
+
+    if(socket) {
+      socket.close();
+    }
+
+    socket = new WebSocket(appConfig.roomServerUrl);
+
+    socket.addEventListener('message', (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if(message.status === 'ok') {
+          if(message.payload.type === 'roomcreated') {
+            const roomid = message.payload.roomid;
+            const baseurl = location.origin + location.pathname;
+            const shareUrl = baseurl + `?roomid=${roomid}`;
+            shareUrlInput.value = shareUrl;
+          }
+        } else {
+          shareUrlInput.value = '取得エラー';
+          shareUrlGetButton.disabled = false;
+          console.error('ルーム作成エラー', message);
+        }
+      } catch(e) {
+        shareUrlInput.value = '取得エラー';
+        shareUrlGetButton.disabled = false;
+        console.error(e);
+      }
+    });
+
+    socket.addEventListener('open', (event) => {
+      socket.send(JSON.stringify({
+        payload: {
+          command: 'createroom'
+        }
+      }));
+    });
+
+    socket.addEventListener('error', () => {
+      shareUrlInput.value = '接続エラー';
+      shareUrlGetButton.disabled = false;
+    });
+  });
+
+  shareUrlInput.addEventListener('focus', (event) => {
+    shareUrlInput.select();
   });
 
   // システムボタンの動作
@@ -79,5 +239,11 @@ const resetButton = document.querySelector('.reset-button');
     timerOutput.value = '60.00';
     extendButton.disabled = true;
     unextendButton.disabled = true;
+
+    broadcastJson({
+      payload: {
+        broadcastPayload: { command: 'resettimer' }
+      }
+    });
   });
 })();
