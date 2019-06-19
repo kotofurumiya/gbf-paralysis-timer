@@ -275,6 +275,7 @@ if(navigator.serviceWorker) {
     socket.addEventListener('error', () => {
       shareUrlInput.value = '接続エラー';
       shareUrlGetButton.disabled = false;
+      socket = null;
     });
   });
 
@@ -291,7 +292,7 @@ if(navigator.serviceWorker) {
     installPrompt.prompt();
     installPrompt.userChoice.then((choiceResult) => {
       if (choiceResult.outcome === 'accepted') {
-
+        // インストール承認後の処理（今は特に何もしない）
       }
 
       installPrompt = null;
