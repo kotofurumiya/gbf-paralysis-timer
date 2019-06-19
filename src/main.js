@@ -137,7 +137,14 @@ let socket = null;
   unextendButton.disabled = true;
 
   paralysis60Button.addEventListener('click', (event) => {
-    const delayMs = dataStore.buttonTiming === 'immediate' ? 0 : CLINCHER_DELAY;
+    let delayMs = 0;
+    const timing = dataStore.buttonTiming;
+
+    if(timing === 'immediate') {
+      delayMs = 0;
+    } else if(timing === 'clincher') {
+      delayMs = CLINCHER_DELAY;
+    }
 
     extendButton.disabled = false;
     timer.unextend();
