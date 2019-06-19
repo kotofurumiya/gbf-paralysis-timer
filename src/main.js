@@ -11,7 +11,7 @@ const canvas = document.querySelector('.timer-canvas');
 canvas.width = 600;
 canvas.height = 600;
 
-const dataStore = new DataStore();
+const dataStore = new DataStore('GbfParalysisTimer');
 
 const timerOutput = document.querySelector('.timer-output');
 

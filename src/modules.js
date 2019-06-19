@@ -11,20 +11,21 @@ async function loadImageAsync(srcUrl) {
 }
 
 class DataStore {
-  constructor() {
+  constructor(keyPrefix = '') {
     this._storage = localStorage;
+    this._storeKey = keyPrefix ? `${keyPrefix}/preferences` : 'preferences';
   }
 
   saveJson(json) {
     if(this._storage) {
-      this._storage.setItem('preferences', JSON.stringify(json));
+      this._storage.setItem(this._storeKey, JSON.stringify(json));
     }
   }
 
   loadAsJson() {
-    if(this._storage && this._storage.getItem('preferences')) {
+    if(this._storage && this._storage.getItem(this._storeKey)) {
       try {
-        return JSON.parse(this._storage.getItem('preferences'));
+        return JSON.parse(this._storage.getItem(this._storeKey));
       } catch(e) {
         return {};
       }
