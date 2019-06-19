@@ -19,19 +19,38 @@ const paralysis60Button = document.querySelector('.paralysis-60-button');
 const extendButton = document.querySelector('.extend-button');
 const unextendButton = document.querySelector('.unextend-button');
 
+const openPreferencesButton = document.querySelector('.pref-button');
+const closePreferencesButton = document.querySelector('.close-pref-button');
+const preferencesDialog = document.querySelector('.preferences-dialog');
+
 const buttonTimingSelect = document.querySelector('.button-timing-select');
 const shareUrlGetButton = document.querySelector('.share-url-button');
 const shareUrlInput = document.querySelector('.share-url-input');
+const installButton = document.querySelector('.install-button');
 
 const resetButton = document.querySelector('.reset-button');
 
 let socket = null;
+let installPrompt = null;
 
+// ServiceWorker登録
+if(navigator.serviceWorker) {
+  navigator.serviceWorker.register('./serviceworker.js');
+}
+
+// メイン処理
 (async function main() {
+  // インストールプロンプトの抑制
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    installPrompt = event;
+    installButton.disabled = false;
+  });
+
   // タイマーと描画周り
   const timer = new ParalysisTimer();
 
-  const paralysisImg = await loadImageAsync('paralysis.svg');
+  const paralysisImg = await loadImageAsync('img/paralysis.svg');
   const timerCanvas = new TimerCanvas(canvas, { paralysisImg });
   timerCanvas.render(1, 0);
   timerOutput.value = '60.00';
@@ -181,6 +200,32 @@ let socket = null;
     });
   });
 
+  // リセットボタンの動作
+  resetButton.addEventListener('click', (event) => {
+    timer.stop();
+    timer.reset();
+    timer.unextend();
+    timerCanvas.render(1, 0);
+    timerOutput.value = '60.00';
+    extendButton.disabled = true;
+    unextendButton.disabled = true;
+
+    broadcastJson({
+      payload: {
+        broadcastPayload: { command: 'resettimer' }
+      }
+    });
+  });
+
+  // 設定ダイアログの操作
+  openPreferencesButton.addEventListener('click', (event) => {
+    preferencesDialog.dataset['visible'] = 'true';
+  });
+
+  closePreferencesButton.addEventListener('click', (event) => {
+    delete preferencesDialog.dataset['visible'];
+  });
+
   // 設定ボタンの動作
   buttonTimingSelect.value = dataStore.buttonTiming;
   buttonTimingSelect.addEventListener('change', (event) => {
@@ -237,20 +282,19 @@ let socket = null;
     shareUrlInput.select();
   });
 
-  // システムボタンの動作
-  resetButton.addEventListener('click', (event) => {
-    timer.stop();
-    timer.reset();
-    timer.unextend();
-    timerCanvas.render(1, 0);
-    timerOutput.value = '60.00';
-    extendButton.disabled = true;
-    unextendButton.disabled = true;
+  // インストール周りの処理
+  installButton.addEventListener('click', (event) => {
+    if(!installPrompt) {
+      return;
+    }
 
-    broadcastJson({
-      payload: {
-        broadcastPayload: { command: 'resettimer' }
+    installPrompt.prompt();
+    installPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+
       }
+
+      installPrompt = null;
     });
   });
 })();

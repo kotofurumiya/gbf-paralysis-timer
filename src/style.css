@@ -10,6 +10,7 @@ html {
 }
 
 body {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -35,6 +36,64 @@ a {
 
 a:visited {
   color: rgb(240, 240, 240);
+}
+
+.preferences-dialog {
+  position: absolute;
+  display: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 999;
+}
+
+.preferences-dialog[data-visible] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preferences-dialog-content {
+  background-color: slategray;
+  width: 600px;
+  max-width: 95%;
+  padding: 1em;
+}
+
+.close-pref-button,
+.install-button {
+  display: block;
+  border: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  color: white;
+  width: 100%;
+  padding: 0.2em 0;
+  text-align: center;
+  cursor: pointer;
+}
+
+.close-pref-button {
+  font-size: 1.2em;
+  background-color: rgb(75, 176, 62);
+}
+
+.close-pref-button:focus,
+.install-button:focus {
+  outline: none;
+}
+
+.install-button {
+  background-color: rgb(83, 95, 209);
+  font-size: 1em;
+  margin: 1em 0;
+}
+
+.install-button[disabled] {
+  display: none;
 }
 
 .canvas-container {
@@ -211,6 +270,14 @@ a:visited {
 
 .system-button:hover {
   background-color: rgb(104, 163, 255);
+}
+
+.pref-button {
+  background-color: rgb(71, 181, 67);
+}
+
+.pref-button:hover {
+  background-color: rgb(88, 224, 83);
 }
 
 .app-footer {
