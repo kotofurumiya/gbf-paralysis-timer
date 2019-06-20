@@ -293,6 +293,7 @@ if(navigator.serviceWorker) {
     installPrompt.userChoice.then((choiceResult) => {
       if (choiceResult.outcome === 'accepted') {
         installButton.disabled = true;
+        gtag('event', 'Add to Homescreen', {'event_category': 'App', 'event_label': 'GBF Paralysis Timer'});
       }
 
       installPrompt = null;

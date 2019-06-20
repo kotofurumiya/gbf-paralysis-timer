@@ -1,4 +1,4 @@
-const CACHE_KEY = 'GbfParalysisTimer-Cache-v1';
+const CACHE_KEY = 'GbfParalysisTimer-Cache-v2';
 
 self.addEventListener('install', (event) => {
   const urlsToCache = [
@@ -14,7 +14,9 @@ self.addEventListener('install', (event) => {
 
   event.waitUntil(
       caches.open(CACHE_KEY)
-          .then((cache) => cache.addAll(urlsToCache))
+          .then((cache) => cache.addAll(
+              urlsToCache.map((url) => new Request(url, {cache: 'no-cache', mode: 'no-cors'}))
+          ))
   );
 });
 
