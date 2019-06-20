@@ -292,7 +292,7 @@ if(navigator.serviceWorker) {
     installPrompt.prompt();
     installPrompt.userChoice.then((choiceResult) => {
       if (choiceResult.outcome === 'accepted') {
-        // インストール承認後の処理（今は特に何もしない）
+        installButton.disabled = true;
       }
 
       installPrompt = null;
